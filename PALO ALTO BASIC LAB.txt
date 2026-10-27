@@ -1,0 +1,146 @@
+*PALO ALTO BASIC LAB*
+
+First we start with Creating zones in palo alto
+
+Under the network tab select zones
+Add(At the bottom)
+Name: Trusted
+Type: Layer3
+press ok
+
+Another 
+Add
+Name: Untrusted
+Type: Layer3
+press ok
+
+Once zones are configured we'll configure the interfaces
+
+Click ethernet1/2
+Interface Name: ethernet1/2
+Interface type: Layer3
+Virtual Router: default
+Security Zone: Untrusted
+Under IPv4
+Type: Static
+IP
+Add
+103.126.78.1/30
+Select the Management Profile: Ping
+press ok
+
+Click ethernet1/1
+Interface Name: ethernet1/1
+Interface type: Layer3
+Virtual Router: default
+Security Zone: Trusted
+Under IPv4
+Type: Static
+IP
+Add
+192.168.1.1/24
+Select the Management Profile: Ping
+press ok
+
+Lets Configure DHCP Server
+Network>DHCP
+Add
+interface: ethernet1/1
+under Lease
+IP pools
+press add
+define the address pool
+192.168.1.2-192.168.1.254
+under Options
+Gateway: 192.168.1.1(IP address on ethernet1/1)
+Subnet Mask: 255.255.255.0
+Primary DNS: 8.8.8.8
+press ok
+
+After this Press Commit(Most Important thing after every change/configuration)
+
+Lets now create an address object for the lan subnet.
+
+Objects>Addresses>
+Add
+Name:Lan_Subnet
+Type:IP Netmask 192.168.1.0/24
+press ok.
+
+
+After this open the client windows go to the terminal(cmd) and 
+check ip address assigned
+ipconfig and 
+
+try to ping 192.168.1.1
+
+Now lets configure the security policy and NAT PolicyNow lets configure the security policy and NAT Policy
+
+Under the policies 
+select security
+add
+under General
+name: Lan-To-Wan
+Rule Type: universal(default)
+Under Source
+Source Zone
+Add
+Trusted
+Source Address
+Add 
+Select Lan_Subnet
+Under Destination 
+Destination zone
+Add
+Untrusted
+Destination Address(Any)
+Under Service/URL Category
+select any(change it from application-default to any)
+press ok
+Under Actions
+Action Setting
+Action Allow
+Press ok
+
+SNAT
+Under the policies
+select NAT
+add
+under General
+name: SNAT(any name)
+Under Original Packet
+Source Zone
+add
+source zone: Trusted
+destination zone: Untrusted
+Destination Interface:ethernet1/2
+Source Address:Lan_Subnet
+Under Translated Packet
+Translation Type: Dynamic IP and Port
+Address Type: Interface Address
+Interface: ethernet1/2
+IP Address:103.126.78.1/30
+press ok
+COMMIT
+
+Now the most important thing that is static route!!
+Network>Virtual Routers
+click on default>Static Routes
+Add
+Name:Internet
+Destination: 0.0.0.0/0
+Interface: ethernet1/2
+Next Hop: 103.126.78.2
+Keep everything as it is.
+press ok
+
+In this lab we have configured 8.8.8.8 as a loopback ip on the router and see if we are able to ping it.
+
+
+After this open the client windows go to the terminal(cmd) and 
+ping 8.8.8.8
+or
+open browser and search https://something.com
+
+If both of these work. 
+You have successfully configured DHCP and SNAT properly!
